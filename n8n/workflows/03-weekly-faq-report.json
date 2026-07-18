@@ -1,0 +1,81 @@
+{
+  "name": "03-weekly-faq-report",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "weeks", "weeksInterval": 1, "triggerAtDay": [1], "triggerAtHour": 9 }]
+        }
+      },
+      "id": "trigger-weekly",
+      "name": "Monday 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "notes": "Weekly report (proposal L307-324)."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_STAFF_DATASET_ID}}/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.DIFY_STAFF_API_KEY}}" }]
+        },
+        "options": {}
+      },
+      "id": "fetch-7d-logs",
+      "name": "Fetch 7-day conversations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO Phase 4: top-10 questions, unanswered counts, avg feedback,\n// total conversations, token usage (proposal L309-318).\nreturn items;"
+      },
+      "id": "summarize",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO: format as Thai report (polite, ครับ).\nreturn items;"
+      },
+      "id": "format",
+      "name": "Format report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://notify-api.line.me/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.LINE_NOTIFY_TOKEN}}" }]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "message", "value": "={{ $json.report }}" }]
+        }
+      },
+      "id": "send",
+      "name": "Send report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Monday 09:00": { "main": [[{ "node": "Fetch 7-day conversations", "type": "main", "index": 0 }]] },
+    "Fetch 7-day conversations": { "main": [[{ "node": "Summarize", "type": "main", "index": 0 }]] },
+    "Summarize": { "main": [[{ "node": "Format report", "type": "main", "index": 0 }]] },
+    "Format report": { "main": [[{ "node": "Send report", "type": "main", "index": 0 }]] }
+  }
+}

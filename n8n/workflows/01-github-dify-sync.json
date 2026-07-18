@@ -1,0 +1,184 @@
+{
+  "name": "01-github-dify-sync",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 2 }]
+        }
+      },
+      "id": "trigger-schedule",
+      "name": "Schedule (every 2 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "notes": "Poll-based sync (no webhook needed). Swap to GitHub Webhook trigger later."
+    },
+    {
+      "parameters": {
+        "command": "cd /tmp/selfservice-repo && git fetch origin main && git reset --hard origin/main && git diff HEAD~1 --name-only"
+      },
+      "id": "git-pull",
+      "name": "Git Pull (SSH)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "credentials": {
+        "ssh": [{ "id": "REPLACE_WITH_CRED_ID", "name": "GitHub SSH" }]
+      },
+      "notes": "Uses SSH credential. Repo cloned once at /tmp/selfservice-repo on n8n host."
+    },
+    {
+      "parameters": {
+        "regex": "^data/(canonical|internal)/.*\\.yaml$",
+        "ignoreCase": false
+      },
+      "id": "filter-yaml",
+      "name": "Filter canonical/internal YAML",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "notes": "Only data/canonical/* and data/internal/* .yaml files (proposal L128-134)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO Phase 4: load schemas/knowledge.schema.yaml, template.schema.yaml,\n// internal.schema.yaml from selfservice-repo and validate each YAML.\n// On fail -> throw with file + error message (proposal L289).\n// Do NOT mutate Dify KB on validation failure.\nreturn items;"
+      },
+      "id": "schema-validate",
+      "name": "Schema Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "notes": "Validate against selfservice-repo/schemas/*.yaml. Reject -> halt + notify."
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO Phase 4: transform YAML -> markdown block per proposal L155-200.\n// Header: # <id>\n// Sections: หมวด/แพลตฟอร์ม, สรุป, รายละเอียด, ขั้นตอน, ข้อจำกัด,\n//           ข้อมูลที่ต้องขอ, Aliases, Sources\n// metadata: canonical_id, document_type, status, platforms, audience,\n//           category, source_ids, sync_commit, sync_timestamp\nreturn items;"
+      },
+      "id": "transform-yaml",
+      "name": "Transform YAML -> Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.metadata.audience }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "staff",
+              "outputKey": "staff"
+            },
+            {
+              "value2": "customer",
+              "outputKey": "customer"
+            }
+          ]
+        }
+      },
+      "id": "route-audience",
+      "name": "Route audience",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1100, 0],
+      "notes": "Customer stream: reject data/internal/, draft, needs_review, deprecated.\nGate knowledge must not serve Kory questions (proposal L475)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_STAFF_DATASET_ID}}/documents/create_by_text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.DIFY_STAFF_API_KEY}}" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({ name: $json.canonical_id, text: $json.markdown, metadata: $json.metadata }) }}",
+        "options": {}
+      },
+      "id": "upsert-staff",
+      "name": "Upsert to kb-staff-general",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, -100],
+      "notes": "Use create_by_text or update_by_text by canonical_id+document_type (proposal L287)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_CUSTOMER_DATASET_ID}}/documents/create_by_text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.DIFY_CUSTOMER_API_KEY}}" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({ name: $json.canonical_id, text: $json.markdown, metadata: $json.metadata }) }}",
+        "options": {}
+      },
+      "id": "upsert-customer",
+      "name": "Upsert to kb-customer-faq",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 100],
+      "notes": "Only approved + audience:customer. Reject data/internal/, draft, needs_review, deprecated."
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO Phase 4: list dataset docs by metadata, delete via\n// DELETE /v1/datasets/{id}/documents/{doc_id} for files that were deleted\n// or status changed to deprecated (proposal L279, L542-544).\nreturn items;"
+      },
+      "id": "cleanup-deprecated",
+      "name": "Cleanup deleted/deprecated",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://notify-api.line.me/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.LINE_NOTIFY_TOKEN}}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "=[OLS chatbot sync FAIL] {{$json.error}}" }
+          ]
+        }
+      },
+      "id": "notify-failure",
+      "name": "Notify on failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1760, 0],
+      "notes": "Alert @Natties45 on validation/upsert failure (proposal L283)."
+    }
+  ],
+  "connections": {
+    "Schedule (every 2 min)": { "main": [[{ "node": "Git Pull (SSH)", "type": "main", "index": 0 }]] },
+    "Git Pull (SSH)": { "main": [[{ "node": "Filter canonical/internal YAML", "type": "main", "index": 0 }]] },
+    "Filter canonical/internal YAML": { "main": [[{ "node": "Schema Validate", "type": "main", "index": 0 }]] },
+    "Schema Validate": { "main": [[{ "node": "Transform YAML -> Markdown", "type": "main", "index": 0 }]] },
+    "Transform YAML -> Markdown": { "main": [[{ "node": "Route audience", "type": "main", "index": 0 }]] },
+    "Route audience": {
+      "main": [
+        [{ "node": "Upsert to kb-staff-general", "type": "main", "index": 0 }],
+        [{ "node": "Upsert to kb-customer-faq", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upsert to kb-staff-general": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
+    "Upsert to kb-customer-faq": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] }
+  }
+}

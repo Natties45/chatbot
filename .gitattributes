@@ -1,0 +1,11 @@
+# Ensure shell scripts use LF on every platform (they run on Linux server)
+*.sh           text eol=lf
+*.json         text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+Caddyfile      text eol=lf
+Makefile       text eol=lf
+*.txt          text eol=lf
+*.md           text eol=lf
+.gitkeep       text eol=lf
+.gitignore     text eol=lf

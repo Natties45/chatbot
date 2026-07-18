@@ -1,0 +1,29 @@
+# Caddyfile — OLS chatbot reverse proxy (IP-only mode)
+#
+# Phase 6 will add TLS via domain + Let's Encrypt. Until then we run
+# IP-only with Caddy's internal CA. Browsers will warn about the
+# self-signed cert on the customer-facing Dify share link — accepted
+# trade-off per deployment decision (domain added later).
+
+# Dify web — the ONLY public endpoint
+:80 {
+	reverse_proxy dify-web:3000
+
+	# When a domain is added later, replace the block above with:
+	# chat.example.com {
+	#   reverse_proxy dify-web:3000
+	#   tls <email>  # Let's Encrypt
+	# }
+}
+
+# n8n admin — localhost bind only, never exposed publicly
+:5678 {
+	bind 127.0.0.1
+
+	# Generate bcrypt hash for the password, then uncomment:
+	# basic_auth {
+	#   ${N8N_BASIC_AUTH_USER} <bcrypt-hash-here>
+	# }
+
+	reverse_proxy n8n:5678
+}

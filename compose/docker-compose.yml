@@ -1,0 +1,13 @@
+# Base compose file for OLS chatbot stack
+# Defines shared network and named volumes only.
+
+networks:
+  ols-chatbot:
+    driver: bridge
+
+volumes:
+  dify-data:
+  n8n-data:
+  ollama-models:
+  weaviate-data:
+  caddy-data:

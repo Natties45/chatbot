@@ -1,0 +1,79 @@
+{
+  "name": "02-bot-unanswered-alert",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] }
+      },
+      "id": "trigger-hourly",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "notes": "Hourly sweep of Dify conversations (proposal L293-305)."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_STAFF_DATASET_ID}}/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.DIFY_STAFF_API_KEY}}" }]
+        },
+        "options": {}
+      },
+      "id": "fetch-logs",
+      "name": "Fetch Dify conversations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO Phase 4: filter conversations where answer contains 'ไม่พบข้อมูล'\n// or feedback == 'dislike'. Mark already-notified to avoid duplicates.\nreturn items;"
+      },
+      "id": "filter-unanswered",
+      "name": "Filter unanswered",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// TODO: aggregate into a single message (count + sample questions).\nreturn items;"
+      },
+      "id": "aggregate",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://notify-api.line.me/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.LINE_NOTIFY_TOKEN}}" }]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "message", "value": "={{ $json.alert }}" }]
+        }
+      },
+      "id": "notify",
+      "name": "Notify @Natties45",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Every hour": { "main": [[{ "node": "Fetch Dify conversations", "type": "main", "index": 0 }]] },
+    "Fetch Dify conversations": { "main": [[{ "node": "Filter unanswered", "type": "main", "index": 0 }]] },
+    "Filter unanswered": { "main": [[{ "node": "Aggregate", "type": "main", "index": 0 }]] },
+    "Aggregate": { "main": [[{ "node": "Notify @Natties45", "type": "main", "index": 0 }]] }
+  }
+}
