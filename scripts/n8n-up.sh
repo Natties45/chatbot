@@ -9,6 +9,6 @@ docker compose -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.y
 docker compose -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.yml ps
 
 echo
-echo "Access n8n via SSH tunnel from your workstation:"
-echo "  ssh -L 5678:127.0.0.1:5678 chatbot"
-echo "  then open http://localhost:5678"
+echo "n8n is running — access at:"
+echo "  http://<server-ip>:5678"
+echo "  (ensure firewall/secgroup allows port 5678)"

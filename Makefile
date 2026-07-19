@@ -7,7 +7,7 @@ preflight:
 	bash $(ROOT)/scripts/preflight.sh
 
 dify-fetch:
-	git clone --depth 1 --branch $$(grep DIFY_IMAGE_TAG $(ROOT)/.env | cut -d= -f2) https://github.com/langgenius/dify.git /tmp/dify-src
+	git clone --depth 1 --branch $$(grep DIFY_IMAGE_TAG $(ROOT)/.env | cut -d= -f2- | sed 's/[[:space:]]*#.*//' | xargs) https://github.com/langgenius/dify.git /tmp/dify-src
 	cp /tmp/dify-src/docker/docker-compose.yaml $(ROOT)/compose/dify/docker-compose.yaml
 	cp /tmp/dify-src/docker/.env.example $(ROOT)/.env.example.dify
 	rm -rf /tmp/dify-src
@@ -44,7 +44,7 @@ logs:
 	docker compose -f $(ROOT)/compose/docker-compose.yml logs -f
 
 seed-ollama:
-	docker exec ollama ollama pull $$(grep OLLAMA_EMBED_MODEL $(ROOT)/.env | cut -d= -f2)
+	docker exec ollama ollama pull $$(grep OLLAMA_EMBED_MODEL $(ROOT)/.env | cut -d= -f2- | sed 's/[[:space:]]*#.*//' | xargs)
 
 backup:
 	bash $(ROOT)/scripts/backup.sh
