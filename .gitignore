@@ -1,18 +1,24 @@
-# Secrets & env
+# Secrets & environment
 .env
 *.env
-!*.env.example
-secrets/*
-!secrets/README.md
-!secrets/.gitkeep
+!.env.example
+!.env.example.dify
 
-# Vendor/data volumes
-dify/.env
-n8n/data/
-ollama/models/
-volumes/
+# Dify vendored compose (fetched at deploy time)
+compose/dify/docker-compose.yaml
 
-# Logs & OS
-*.log
+# Backup archives
+/var/backups/
+
+# OS junk
 .DS_Store
 Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker volumes (local dev)
+volumes/

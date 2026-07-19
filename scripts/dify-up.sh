@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-DIFY_TAG=$(grep '^DIFY_IMAGE_TAG=' .env | cut -d= -f2)
+DIFY_TAG=$(grep '^DIFY_IMAGE_TAG=' .env | cut -d= -f2- | sed 's/[[:space:]]*#.*//' | xargs)
 if [[ -z "$DIFY_TAG" ]]; then
   echo "DIFY_IMAGE_TAG not set in .env"; exit 1
 fi

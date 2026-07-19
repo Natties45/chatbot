@@ -56,10 +56,20 @@ echo
 
 echo "Ports (80, 443, 5678 must be free):"
 for p in 80 443 5678; do
-  if ss -tlnp 2>/dev/null | awk '{print $4}' | grep -q ":${p}\$"; then
-    fail "port ${p} already in use"
+  if command -v ss >/dev/null 2>&1; then
+    if ss -tlnp 2>/dev/null | awk '{print $4}' | grep -q ":${p}$"; then
+      fail "port ${p} already in use"
+    else
+      ok "port ${p} free"
+    fi
+  elif command -v netstat >/dev/null 2>&1; then
+    if netstat -tlnp 2>/dev/null | awk '{print $4}' | grep -q ":${p}$"; then
+      fail "port ${p} already in use"
+    else
+      ok "port ${p} free"
+    fi
   else
-    ok "port ${p} free"
+    warn "cannot check port ${p} (ss/netstat not found)"
   fi
 done
 echo

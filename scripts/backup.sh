@@ -25,7 +25,7 @@ docker exec n8n-postgres pg_dump -U n8n -d n8n | gzip > "$DEST/n8n-postgres.sql.
 echo "  -> Weaviate volume ..."
 docker run --rm -v ols-chatbot_weaviate-data:/data -v "$DEST":/backup alpine \
   tar czf /backup/weaviate-data.tar.gz -C /data . 2>/dev/null || \
-  warn "weaviate-data volume not found (Dify may use built-in vector store)"
+  echo "  [WARN] weaviate-data volume not found (Dify may use built-in vector store)"
 
 echo "  -> n8n-data volume ..."
 docker run --rm -v ols-chatbot_n8n-data:/data -v "$DEST":/backup alpine \

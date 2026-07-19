@@ -1,4 +1,4 @@
-.PHONY: preflight dify-up dify-down n8n-up n8n-down ollama-up ollama-down proxy-up backup restore status logs seed-ollama dify-fetch
+.PHONY: preflight dify-up dify-down n8n-up n8n-down ollama-up ollama-down proxy-up proxy-down backup restore status logs seed-ollama dify-fetch
 
 SHELL := /bin/bash
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -31,7 +31,10 @@ ollama-down:
 	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/ollama/docker-compose.ollama.yml down
 
 proxy-up:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/Caddyfile up -d
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml up -d
+
+proxy-down:
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml down
 
 status:
 	docker compose ls
