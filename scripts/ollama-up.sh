@@ -8,8 +8,8 @@ EMBED_MODEL=$(grep '^OLLAMA_EMBED_MODEL=' .env | cut -d= -f2)
 EMBED_MODEL="${EMBED_MODEL:-bge-m3}"
 
 echo "Starting Ollama ..."
-docker compose -f compose/docker-compose.yml -f compose/ollama/docker-compose.ollama.yml --env-file .env up -d
-docker compose -f compose/docker-compose.yml -f compose/ollama/docker-compose.ollama.yml ps
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/ollama/docker-compose.ollama.yml --env-file .env up -d
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/ollama/docker-compose.ollama.yml ps
 
 echo "Waiting for Ollama to be ready ..."
 for i in $(seq 1 20); do

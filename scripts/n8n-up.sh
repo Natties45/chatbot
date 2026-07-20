@@ -5,8 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 echo "Starting n8n ..."
-docker compose -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.yml --env-file .env up -d
-docker compose -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.yml ps
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.yml --env-file .env up -d
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.yml ps
 
 echo
 echo "n8n is running — access at:"

@@ -21,5 +21,5 @@ if [[ ! -f compose/dify/docker-compose.yaml ]]; then
 fi
 
 echo "Starting Dify ..."
-docker compose -f compose/docker-compose.yml -f compose/dify/docker-compose.yaml --env-file "${ROOT}/.env" up -d
-docker compose -f compose/docker-compose.yml -f compose/dify/docker-compose.yaml ps
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/dify/docker-compose.yaml --env-file "${ROOT}/.env" up -d
+docker compose --project-directory "${ROOT}" -f compose/docker-compose.yml -f compose/dify/docker-compose.yaml ps
