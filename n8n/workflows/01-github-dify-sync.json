@@ -137,6 +137,35 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "noc-policy-check",
+              "leftValue": "={{ $json.metadata.category }}",
+              "rightValue": "internal/",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "noc-policy-filter",
+      "name": "NOC Policy Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1460, 0],
+      "notes": "Drop documents with category starting with 'internal/' — restricted for NOC per AGENTS.md."
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_CUSTOMER_DATASET_ID}}/documents/create_by_text",
         "sendHeaders": true,
@@ -200,11 +229,12 @@
     "Route audience": {
       "main": [
         [{ "node": "Upsert to kb-operation", "type": "main", "index": 0 }],
-        [{ "node": "Upsert to kb-noc", "type": "main", "index": 0 }],
+        [{ "node": "NOC Policy Filter", "type": "main", "index": 0 }],
         [{ "node": "Upsert to kb-customer-faq", "type": "main", "index": 0 }]
       ]
     },
     "Upsert to kb-operation": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
+    "NOC Policy Filter": { "main": [[{ "node": "Upsert to kb-noc", "type": "main", "index": 0 }]] },
     "Upsert to kb-noc": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
     "Upsert to kb-customer-faq": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] }
   }
