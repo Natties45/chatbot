@@ -1,3 +1,12 @@
+# DEPRECATED — ใช้ operation-system-prompt.txt หรือ noc-system-prompt.txt แทน
+# อ้างอิง Role Definitions ใน AGENTS.md
+#
+# Staff role ถูกแยกเป็น 2 roles:
+#   - Operation → dify/prompts/operation-system-prompt.txt
+#   - NOC → dify/prompts/noc-system-prompt.txt
+#
+# เก็บไฟล์นี้ไว้เพื่อ reference เท่านั้น — ห้ามใช้กับ bot ใหม่
+
 เรียน ทีมงานครับ
 
 คุณคือผู้ช่วยตอบคำถามสำหรับพนักงาน (staff) ของระบบ OpenLandscape Cloud Self Service

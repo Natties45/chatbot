@@ -34,6 +34,36 @@ Infra-as-code สำหรับ deploy **OLS chatbot** โดยใช้ **Dif
 | Firewall | Security Group |
 | Object storage | Bucket |
 
+## Role Definitions
+
+ระบบมี 3 roles หลัก — แต่ละ role มี scope, KB access, และ constraints ต่างกัน
+
+| Role | Scope | KB Access | External Search | Constraints |
+|------|-------|-----------|-----------------|-------------|
+| **Operation** | ถามตอบ + ค้นหาเพิ่มเติมเพื่อแก้ปัญหา | `kb-operation` (full) | ✅ อนุญาต | น้อยที่สุด — troubleshooting, diagnosis |
+| **NOC** | ถามตอบใน repo เท่านั้น | `kb-noc` (filtered) | ❌ ห้าม | บางหมวด policy ห้ามตอบ (ดูตารางด้านล่าง) |
+| **Customer** | ถามตอบ FAQ สำหรับลูกค้า | `kb-customer` (approved only) | ❌ ห้าม | Customer wording rules + red-team gate |
+
+### NOC Policy — Restricted Categories
+
+หมวดหมู่ที่ NOC bot **ห้ามตอบ** (policy enforcement — sync-level + prompt-level):
+
+| หมวด | เหตุผล | ตัวอย่าง |
+|------|--------|---------|
+| `internal/debug` | ข้อมูล internal troubleshooting | debug log, stack trace, internal tool |
+| `internal/security` | ข้อมูลความปลอดภัยภายใน | firewall rule detail, internal IP range |
+| `internal/architecture` | โครงสร้างระบบภายใน | service topology, DB schema |
+| `internal/change` | การเปลี่ยนแปลงที่ยังไม่ approved | pending change, rollback plan |
+| `internal/audit` | audit log / compliance | internal audit trail |
+
+### Response DNA
+
+| Role | เปิด | ปิด | ภาษา |
+|------|-----|-----|------|
+| Operation | "เรียน ทีม Operation ครับ" | "ขอบคุณครับ" | Thai สุภาพ + technical |
+| NOC | "เรียน ทีม NOC ครับ" | "ขอบคุณครับ" | Thai สุภาพ + policy-aware |
+| Customer | "เรียน ผู้ใช้บริการ" | "ขอบคุณครับ" | Thai สุภาพ + customer-safe |
+
 ## File ownership
 
 - `selfservice-repo`: canonical (read-only)
@@ -51,7 +81,7 @@ chatbot/
 │   └── caddy/Caddyfile             # reverse proxy config
 ├── dify/
 │   ├── apps/             # Dify app DSL (import ผ่าน Dify UI)
-│   └── prompts/          # system prompts (customer + staff)
+│   └── prompts/          # system prompts (operation + noc + customer)
 ├── n8n/
 │   ├── workflows/        # n8n workflow JSON (import ผ่าน n8n UI)
 │   └── credentials/      # credential setup guide
@@ -100,8 +130,9 @@ chatbot/
 
 - `docs/runbook.md` — ขั้นตอน deploy ทั้งหมด
 - `docs/recovery.md` — การกู้คืนระบบ
-- `dify/prompts/customer-system-prompt.txt` — system prompt ของ customer bot
-- `dify/prompts/staff-system-prompt.txt` — system prompt ของ staff bot
+- `dify/prompts/operation-system-prompt.txt` — system prompt ของ Operation bot
+- `dify/prompts/noc-system-prompt.txt` — system prompt ของ NOC bot
+- `dify/prompts/customer-system-prompt.txt` — system prompt ของ Customer bot
 - `n8n/credentials/README.md` — วิธีตั้งค่า credentials ใน n8n
 
 ## Known gotchas
