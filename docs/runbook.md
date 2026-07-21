@@ -54,19 +54,17 @@ Acceptance (proposal L443-448):
 
 ```bash
 bash scripts/n8n-up.sh
-# บนเครื่อง dev
-ssh -L 5678:127.0.0.1:5678 chatbot
-# เปิด http://localhost:5678 → สร้าง owner → สร้าง credentials (ดู n8n/credentials/README.md)
+# เปิด http://<server-ip>:5678 → สร้าง owner → สร้าง credentials (ดู n8n/credentials/README.md)
 ```
 
 Acceptance (proposal L540):
-- [ ] n8n UI เข้าได้เฉพาะผ่าน SSH tunnel หรือ Caddy + auth
+- [ ] n8n UI เข้าได้ที่ http://<server-ip>:5678 (firewall/secgroup ต้องเปิด port 5678)
 - [ ] credentials ครบ: GitHub SSH, Dify Dataset API, LINE Notify
 - [ ] ไม่มี secret ใน workflow JSON
 
 ## Phase 4 — Sync workflows
 
-Import ใน n8n UI:
+Import ใน n8n UI (http://<server-ip>:5678):
 - `n8n/workflows/01-github-dify-sync.json`
 - `n8n/workflows/02-bot-unanswered-alert.json`
 - `n8n/workflows/03-weekly-faq-report.json`

@@ -1,4 +1,4 @@
-.PHONY: preflight dify-up dify-down n8n-up n8n-down ollama-up ollama-down proxy-up proxy-down backup restore status logs seed-ollama dify-fetch
+.PHONY: preflight dify-up dify-down n8n-up n8n-down ollama-up ollama-down proxy-up proxy-down backup restore status logs seed-ollama dify-fetch all-up all-down logs-dify logs-n8n logs-ollama
 
 SHELL := /bin/bash
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -45,6 +45,27 @@ logs:
 
 seed-ollama:
 	docker exec ollama ollama pull $$(grep OLLAMA_EMBED_MODEL $(ROOT)/.env | cut -d= -f2- | sed 's/[[:space:]]*#.*//' | xargs)
+
+all-up:
+	bash $(ROOT)/scripts/ollama-up.sh
+	bash $(ROOT)/scripts/dify-up.sh
+	bash $(ROOT)/scripts/n8n-up.sh
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml up -d
+
+all-down:
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/n8n/docker-compose.n8n.yml down
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/dify/docker-compose.yaml down || true
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/ollama/docker-compose.ollama.yml down
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml down
+
+logs-dify:
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/dify/docker-compose.yaml logs -f
+
+logs-n8n:
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/n8n/docker-compose.n8n.yml logs -f
+
+logs-ollama:
+	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/ollama/docker-compose.ollama.yml logs -f
 
 backup:
 	bash $(ROOT)/scripts/backup.sh

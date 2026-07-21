@@ -35,7 +35,12 @@ docker compose -f compose/docker-compose.yml -f compose/n8n/docker-compose.n8n.y
 docker compose -f compose/docker-compose.yml -f compose/dify/docker-compose.yaml down || true
 
 echo "  -> Dify postgres ..."
-gunzip -c "${SRC}/dify-postgres.sql.gz" | docker exec -i dify-db psql -U postgres
+DIFY_DB_CONTAINER=$(docker ps --filter name=db_postgres --format '{{.Names}}' | head -1)
+if [[ -z "$DIFY_DB_CONTAINER" ]]; then
+  echo "  [WARN] Dify postgres container not found — skipping"
+else
+  gunzip -c "${SRC}/dify-postgres.sql.gz" | docker exec -i "$DIFY_DB_CONTAINER" psql -U postgres
+fi
 
 echo "  -> n8n postgres ..."
 gunzip -c "${SRC}/n8n-postgres.sql.gz" | docker exec -i n8n-postgres psql -U n8n -d n8n

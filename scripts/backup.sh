@@ -17,7 +17,12 @@ mkdir -p "$DEST"
 echo "Backing up to ${DEST} ..."
 
 echo "  -> Dify postgres ..."
-docker exec dify-db pg_dumpall -U postgres | gzip > "$DEST/dify-postgres.sql.gz"
+DIFY_DB_CONTAINER=$(docker ps --filter name=db_postgres --format '{{.Names}}' | head -1)
+if [[ -z "$DIFY_DB_CONTAINER" ]]; then
+  echo "  [WARN] Dify postgres container not found — skipping"
+else
+  docker exec "$DIFY_DB_CONTAINER" pg_dumpall -U postgres | gzip > "$DEST/dify-postgres.sql.gz"
+fi
 
 echo "  -> n8n postgres ..."
 docker exec n8n-postgres pg_dump -U n8n -d n8n | gzip > "$DEST/n8n-postgres.sql.gz"
@@ -25,6 +30,8 @@ docker exec n8n-postgres pg_dump -U n8n -d n8n | gzip > "$DEST/n8n-postgres.sql.
 echo "  -> Weaviate volume ..."
 docker run --rm -v ols-chatbot_weaviate-data:/data -v "$DEST":/backup alpine \
   tar czf /backup/weaviate-data.tar.gz -C /data . 2>/dev/null || \
+  docker run --rm -v chatbot_weaviate-data:/data -v "$DEST":/backup alpine \
+    tar czf /backup/weaviate-data.tar.gz -C /data . 2>/dev/null || \
   echo "  [WARN] weaviate-data volume not found (Dify may use built-in vector store)"
 
 echo "  -> n8n-data volume ..."

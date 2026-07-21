@@ -8,7 +8,9 @@ Credentials สำหรับ n8n workflows เก็บใน **n8n credential
 | Credential name | Type | Purpose |
 |---|---|---|
 | GitHub SSH | SSH | n8n git pull `git@github.com:Natties45/selfservice-repo.git` |
-| Dify Dataset API | Header Auth | Upsert documents into Dify Knowledge Base (Authorization: Bearer <api-key>) |
+| Dify Dataset API (kb-operation) | Header Auth | Upsert documents into kb-operation dataset |
+| Dify Dataset API (kb-noc) | Header Auth | Upsert documents into kb-noc dataset |
+| Dify Dataset API (kb-customer) | Header Auth | Upsert documents into kb-customer dataset |
 | LINE Notify | Header Auth | ส่ง notification ไป @Natties45 (Authorization: Bearer <token>) |
 | SMTP (optional) | SMTP | สำรองการแจ้งเตือนทาง email |
 
