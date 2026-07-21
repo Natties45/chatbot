@@ -34,7 +34,7 @@
     },
     {
       "parameters": {
-        "regex": "^data/(canonical|internal)/.*\\.yaml$",
+        "regex": "^data/(operation|noc|customer)/.*\\.yaml$",
         "ignoreCase": false
       },
       "id": "filter-yaml",
@@ -72,8 +72,12 @@
         "rules": {
           "rules": [
             {
-              "value2": "staff",
-              "outputKey": "staff"
+              "value2": "operation",
+              "outputKey": "operation"
+            },
+            {
+              "value2": "noc",
+              "outputKey": "noc"
             },
             {
               "value2": "customer",
@@ -87,28 +91,49 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [1100, 0],
-      "notes": "Customer stream: reject data/internal/, draft, needs_review, deprecated.\nGate knowledge must not serve Kory questions (proposal L475)."
+      "notes": "3-branch: operation → kb-operation, noc → kb-noc, customer → kb-customer.\nCustomer stream: reject data/internal/, draft, needs_review, deprecated.\nGate knowledge must not serve Kory questions (proposal L475)."
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_STAFF_DATASET_ID}}/documents/create_by_text",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_OPERATION_DATASET_ID}}/documents/create_by_text",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "Bearer {{$env.DIFY_STAFF_API_KEY}}" }
+            { "name": "Authorization", "value": "Bearer {{$env.DIFY_OPERATION_API_KEY}}" }
           ]
         },
         "sendBody": true,
         "body": "={{ JSON.stringify({ name: $json.canonical_id, text: $json.markdown, metadata: $json.metadata }) }}",
         "options": {}
       },
-      "id": "upsert-staff",
-      "name": "Upsert to kb-staff-general",
+      "id": "upsert-operation",
+      "name": "Upsert to kb-operation",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1320, -100],
-      "notes": "Use create_by_text or update_by_text by canonical_id+document_type (proposal L287)."
+      "position": [1320, -200],
+      "notes": "Operation KB — full access, external search permitted."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://dify-api:5001/v1/datasets/{{$env.DIFY_NOC_DATASET_ID}}/documents/create_by_text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.DIFY_NOC_API_KEY}}" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({ name: $json.canonical_id, text: $json.markdown, metadata: $json.metadata }) }}",
+        "options": {}
+      },
+      "id": "upsert-noc",
+      "name": "Upsert to kb-noc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 0],
+      "notes": "NOC KB — repo-only, policy-restricted categories filtered at sync level."
     },
     {
       "parameters": {
@@ -174,11 +199,13 @@
     "Transform YAML -> Markdown": { "main": [[{ "node": "Route audience", "type": "main", "index": 0 }]] },
     "Route audience": {
       "main": [
-        [{ "node": "Upsert to kb-staff-general", "type": "main", "index": 0 }],
+        [{ "node": "Upsert to kb-operation", "type": "main", "index": 0 }],
+        [{ "node": "Upsert to kb-noc", "type": "main", "index": 0 }],
         [{ "node": "Upsert to kb-customer-faq", "type": "main", "index": 0 }]
       ]
     },
-    "Upsert to kb-staff-general": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
+    "Upsert to kb-operation": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
+    "Upsert to kb-noc": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] },
     "Upsert to kb-customer-faq": { "main": [[{ "node": "Cleanup deleted/deprecated", "type": "main", "index": 0 }]] }
   }
 }
