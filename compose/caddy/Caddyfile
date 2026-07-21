@@ -7,7 +7,7 @@
 
 # Dify web — the ONLY public endpoint
 :80 {
-	reverse_proxy dify-web:3000
+	reverse_proxy web.compose_ols-chatbot:3000
 
 	# When a domain is added later, replace the block above with:
 	# chat.example.com {
