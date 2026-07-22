@@ -62,6 +62,27 @@ sed -i '/dify_es01_data:/d' "$COMPOSE_FILE"
 # 8. Replace 'default' network with 'ols-chatbot'
 sed -i 's/network: default/network: ols-chatbot/g; s/    - default/    - ols-chatbot/g' "$COMPOSE_FILE"
 
+# 8b. Add ols-chatbot network definition (services reference it but it's not defined yet)
+python3 -c "
+import sys
+with open(sys.argv[1]) as f:
+    content = f.read()
+# Add ols-chatbot network after the last network definition
+marker = 'networks:'
+last_net = content.rfind(marker)
+if last_net > 0:
+    insert_at = content.find('\n', last_net)
+    insert_at = content.find('\n', insert_at + 1)  # skip first line
+    insert_at = content.find('\n', insert_at + 1)  # skip second line
+    insert_at = content.find('\n', insert_at + 1)  # skip third line
+    # Find where the networks section ends (next top-level key or end of file)
+    rest = content[insert_at+1:]
+    # Insert ols-chatbot before the last network entry
+    content = content[:insert_at+1] + '  ols-chatbot:\n    external: true\n' + content[insert_at+1:]
+with open(sys.argv[1], 'w') as f:
+    f.write(content)
+" "$COMPOSE_FILE"
+
 # 9. Add dify-data external volume
 sed -i '/^volumes:/a\  dify-data:\n    external: true' "$COMPOSE_FILE"
 
