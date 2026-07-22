@@ -59,11 +59,10 @@ content = re.sub(r'^\s+-\s+default\s*$', '      - ols-chatbot', content, flags=r
 # 12. Add ols-chatbot network definition if not present
 if 'ols-chatbot:\n    external:' not in content:
     # Insert after the LAST 'networks:' line (top-level networks section)
-    # Find the last occurrence of 'networks:' that starts at column 0
     last_net = content.rfind('\nnetworks:')
     if last_net > 0:
         insert_at = content.find('\n', last_net + 1) + 1
-        content = content[:insert_at] + '  ols-chatbot:\n    external: true\n' + content[insert_at:]
+        content = content[:insert_at] + '  ols-chatbot:\n    driver: bridge\n' + content[insert_at:]
 
 # 13. Ensure volumes section has entries (Dify needs these)
 content = re.sub(r'^volumes:\s*$', 'volumes:\n  dify-data:\n    external: true\n  oradata:\n  pgvector_data:\n  storage:', content, flags=re.MULTILINE)
