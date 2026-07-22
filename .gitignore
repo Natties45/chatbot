@@ -26,3 +26,5 @@ Thumbs.db
 
 # Docker volumes (local dev)
 volumes/
+.hermes/plans/
+.hermes/agy-spec.md

@@ -1,58 +1,58 @@
 # Hermes Agent Status Report — OLS Chatbot
 
-- **Timestamp:** 2026-07-22 17:53 (ICT)
+- **Timestamp:** 2026-07-22 22:30 (ICT)
 - **Target Host:** `203.154.16.45` (`chatbot` ssh host)
-- **Repository:** `Natties45/chatbot` (`c:\Users\natti\OneDrive\Documents\natties45\chatbot`)
+- **Repository:** `Natties45/chatbot`
 
 ---
 
-## 🟢 Completed Status (สิ่งที่ทำสำเร็จแล้ว)
+## 🟢 Completed & Verified
 
-### 1. Dify Stack Deployment & Admin Setup
-- **Status:** Healthy & Running (Port 80)
-- **Web UI:** http://203.154.16.45
-- **Admin Email:** `admin@ols-chatbot.local`
-- **Admin Name:** `Admin`
-- **Admin Password:** `u29Q958AHuGo9lkR`
-- **Init Password:** `u29Q958AHuGo9lkR`
-- **Details:** Dify 1.16.0 standard stack with Nginx frontend on port 80. Admin setup completed via container python script.
+### 1. Dify Stack Deployment
+- Dify 1.16.0 Up on Port 80
+- Admin: `admin@ols-chatbot.local`
 
-### 2. n8n Stack Deployment & Owner Setup
-- **Status:** Healthy & Running (Port 5678)
-- **Web UI:** http://203.154.16.45:5678
-- **Owner Email:** `admin@ols-chatbot.local`
-- **Owner Name:** `Admin User`
-- **Owner Password:** `ojvuzVsQ6iNPKJvb`
-- **Basic Auth User:** `admin`
-- **Basic Auth Password:** `ojvuzVsQ6iNPKJvb`
-- **Details:** Connected to `dify_default` external Docker network so n8n can communicate internally with Dify container (`http://dify-nginx-1`). Owner account setup completed via REST API `/rest/owner/setup`.
+### 2. n8n Stack Deployment
+- n8n 2.31.3 Up on Port 5678
+- On `dify_default` external network
 
-### 3. Security & Credentials Management
-- **Single Source of Truth:** `chatbot/.env` (Gitignored)
-- **Secrets Summary Sheet:** `secrets/credentials.txt` (Gitignored)
-- **Cleaned Up:** Deleted all redundant `.env` files (`.env.example.dify`, `secrets/.env`).
-
-### 4. Codebase & Documentation Cleanup
-- **Unified Management:** Unified stack management using `scripts/stack.sh` (replaces old `dify-up.sh`, `n8n-up.sh`, `ollama-up.sh`).
-- **Cleaned Scripts:** Deleted obsolete scripts (`dify-up.sh`, `n8n-up.sh`, `ollama-up.sh`, `n8n_owner.json`).
-- **Updated Docs:** Created `docs/playbook.md` and updated `docs/runbook.md` with IP `203.154.16.45` and `stack.sh` commands.
-- **Git Status:** All changes committed cleanly to `main` branch.
+### 3. Ollama Stack Deployment (Verified ✅)
+- Container: `ollama/ollama:0.32.1` — healthy, on `dify_default` network
+- Model: `bge-m3` (1.2 GB) pulled
+- Cross-container embeddings: `dify-api-1 → http://ollama:11434/api/embeddings` → 1024-dim ✅
 
 ---
 
-## ⏳ Pending Tasks (สิ่งที่ต้องทำถัดไป)
+## ❌ Failed — Needs Rework
 
-1. **Ollama Stack Setup:**
-   - Deploy Ollama container (`ollama/ollama:0.32.1`) via `bash scripts/stack.sh up ollama`
-   - Pull embedding model `bge-m3` into Ollama (`make seed-ollama`)
-2. **Dify Model Providers Setup:**
-   - Connect Local Ollama (`bge-m3`) for embeddings
-   - Connect Ollama Cloud Pro (`qwen2.5:7b`) for LLM inference
-3. **Knowledge Base (KB) Creation:**
-   - Create `kb-operation`, `kb-noc`, and `kb-customer-faq` in Dify UI
-   - Record Dataset IDs and API Keys in `.env`
-4. **n8n Workflows Setup:**
-   - Configure GitHub SSH credentials in n8n UI
-   - Import & test workflows `01-github-dify-sync.json`, `02-bot-unanswered-alert.json`, `03-weekly-faq-report.json`
-5. **Chatbot Apps & Prompts:**
-   - Configure Operation, NOC, and Customer bots in Dify UI with corresponding prompts from `dify/prompts/`
+### 4. Dify Model Provider Setup
+- **Problem:** Raw SQL insert bypassed Dify encryption — `encrypted_config` is plaintext JSON
+- **Impact:** Dify cannot decrypt credentials, provider is unusable
+- **Fix:** Delete entries, recreate via Dify Console API or service layer
+
+### 5. Knowledge Base Creation (3 datasets)
+- **Problem:** `index_struct` = NULL, no keyword tables, no vector collection
+- **Impact:** Datasets exist as DB rows but cannot store/index documents
+- **Fix:** Delete entries, recreate via `POST /console/api/datasets` or `DatasetService`
+
+---
+
+## ⚠️ Known Issues
+
+| Issue | Status |
+|---|---|
+| `OLLAMA_CLOUD_API_KEY` exposed in chat | Must rotate at cloud.ollama.ai |
+| Git push broken (local: HTTPS timeout, server: no SSH key) | Server + local history diverged |
+| `compose/ollama/docker-compose.ollama.yml` fixes on server not synced to local | Need to sync |
+
+---
+
+## 📋 Next Steps (ordered)
+
+1. Rotate `OLLAMA_CLOUD_API_KEY`
+2. Delete bad DB entries (providers, credentials, datasets, tokens)
+3. Recreate Ollama Provider via Console API / service layer
+4. Recreate 3 KBs via Console API / service layer
+5. Verify: embeddings + document indexing end-to-end
+6. Import n8n workflows
+7. Create chatbot apps
