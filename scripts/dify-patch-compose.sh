@@ -39,15 +39,15 @@ content = re.sub(r'^\s+-\s+opensearch-net\s*$', '', content, flags=re.MULTILINE)
 content = re.sub(r'^  milvus:.*?(?=^[a-z])', '', content, flags=re.MULTILINE | re.DOTALL)
 content = re.sub(r'^  opensearch-net:.*?(?=^[a-z])', '', content, flags=re.MULTILINE | re.DOTALL)
 
-# 7. Remove oracle service
+# 7. Remove oracle service + iris service (not needed)
 content = re.sub(r'^  oracle:.*?(?=^[a-z])', '', content, flags=re.MULTILINE | re.DOTALL)
+content = re.sub(r'^  iris:.*?(?=^[a-z])', '', content, flags=re.MULTILINE | re.DOTALL)
 
 # 8. Remove empty networks: lines (left after milvus removal)
 content = re.sub(r'^(\s+)networks:\s*\n(?!\s+\-)', '', content, flags=re.MULTILINE)
 
-# 9. Fix oradata: under networks: -> move to volumes:
+# 9. Fix oradata: under networks: -> remove (iris/oracle removed)
 content = re.sub(r'^  oradata:.*', '', content, flags=re.MULTILINE)
-content = re.sub(r'^(volumes:\n)', r'\1  oradata:\n', content)
 
 # 10. Remove dify_es01_data volume
 content = re.sub(r'^  dify_es01_data:.*', '', content, flags=re.MULTILINE)
@@ -60,8 +60,8 @@ content = re.sub(r'^\s+-\s+default\s*$', '      - ols-chatbot', content, flags=r
 if 'ols-chatbot' not in content:
     content = re.sub(r'^(networks:\n)', r'\1  ols-chatbot:\n    external: true\n', content)
 
-# 13. Add dify-data external volume
-content = re.sub(r'^(volumes:\n)', r'\1  dify-data:\n    external: true\n', content)
+# 13. Ensure volumes section has entries (Dify needs these)
+content = re.sub(r'^volumes:\s*$', 'volumes:\n  dify-data:\n    external: true\n  oradata:\n  pgvector_data:\n  storage:', content, flags=re.MULTILINE)
 
 with open(sys.argv[1], 'w') as f:
     f.write(content)
