@@ -19,6 +19,8 @@ services:
 
 networks:
   dify_default:
+    name: dify_default
+    external: true
 
 volumes:
   ollama-models:
