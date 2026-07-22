@@ -1,11 +1,15 @@
 # Secrets & environment
 .env
 *.env
+secrets/
+scripts/*.json
 !.env.example
 !.env.example.dify
 
 # Dify vendored compose (fetched at deploy time)
-compose/dify/docker-compose.yaml
+compose/dify/*
+!compose/dify/README.md
+!compose/dify/docker-compose.override.yml
 
 # Backup archives
 /var/backups/

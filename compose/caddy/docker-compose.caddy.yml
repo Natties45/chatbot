@@ -7,7 +7,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./compose/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
     networks:
       - ols-chatbot

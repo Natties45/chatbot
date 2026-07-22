@@ -12,7 +12,7 @@ fi
 
 echo "🔧 Patching Dify compose for OLS deployment..."
 
-python3 << 'PYEOF'
+python3 - "$COMPOSE_FILE" << 'PYEOF'
 import re, sys
 
 with open(sys.argv[1]) as f:
@@ -79,4 +79,3 @@ with open(sys.argv[1], 'w') as f:
 
 print('✅ Dify compose patched for OLS deployment')
 PYEOF
-"$COMPOSE_FILE"

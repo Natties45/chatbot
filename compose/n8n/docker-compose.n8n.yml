@@ -24,7 +24,7 @@ services:
     volumes:
       - n8n-data:/home/node/.n8n
     networks:
-      - ols-chatbot
+      - dify_default
     depends_on:
       n8n-postgres:
         condition: service_healthy
@@ -40,7 +40,7 @@ services:
     volumes:
       - n8n-db:/var/lib/postgresql/data
     networks:
-      - ols-chatbot
+      - dify_default
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U n8n -d n8n"]
       interval: 10s
@@ -49,8 +49,9 @@ services:
     restart: unless-stopped
 
 networks:
-  ols-chatbot:
-    driver: bridge
+  dify_default:
+    name: dify_default
+    external: true
 
 volumes:
   n8n-db:

@@ -36,6 +36,8 @@ compose_cmd() {
   shift
   if [[ "$svc" == "all" ]]; then
     docker compose --project-directory "$ROOT" -f "$COMPOSE_BASE" --env-file "$ROOT/.env" "$@"
+  elif [[ "$svc" == "dify" ]]; then
+    docker compose --project-directory "$ROOT" -f "compose/dify/docker-compose.yaml" -f "compose/dify/docker-compose.override.yml" --env-file "$ROOT/.env" "$@"
   else
     # Individual service: use service compose + base (for network/volumes) but NOT include
     # The base file has `include:` which references dify/docker-compose.yaml that may not exist yet
