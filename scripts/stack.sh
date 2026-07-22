@@ -72,9 +72,17 @@ case "$ACTION" in
         git clone --depth 1 --branch "$DIFY_TAG" https://github.com/langgenius/dify.git /tmp/dify-src
         cp /tmp/dify-src/docker/docker-compose.yaml compose/dify/docker-compose.yaml
         cp /tmp/dify-src/docker/.env.example .env.example.dify
+        cp -r /tmp/dify-src/docker/nginx compose/dify/nginx
+        cp -r /tmp/dify-src/docker/envs compose/dify/envs
+        cp -r /tmp/dify-src/docker/volumes compose/dify/volumes
+        cp -r /tmp/dify-src/docker/ssrf_proxy compose/dify/ssrf_proxy
+        cp -r /tmp/dify-src/docker/certbot compose/dify/certbot
+        cp -r /tmp/dify-src/docker/elasticsearch compose/dify/elasticsearch
+        cp -r /tmp/dify-src/docker/startupscripts compose/dify/startupscripts
+        cp -r /tmp/dify-src/docker/pgvector compose/dify/pgvector
         rm -rf /tmp/dify-src
         echo "  -> compose/dify/docker-compose.yaml"
-        echo "  -> .env.example.dify (merge relevant vars into .env)"
+        echo "  -> compose/dify/nginx/, envs/, volumes/, ssrf_proxy/, certbot/, elasticsearch/, startupscripts/, pgvector/"
         bash scripts/dify-patch-compose.sh
       fi
       compose_cmd dify up -d
