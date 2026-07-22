@@ -20,36 +20,35 @@ dify-fetch:
 	cp -r /tmp/dify-src/docker/startupscripts $(ROOT)/compose/dify/startupscripts
 	rm -rf /tmp/dify-src
 
-dify-patch: ## Apply OLS-specific patches to Dify vendored compose
-	bash $(ROOT)/scripts/dify-patch-compose.sh
+dify-patch: ## Apply OLS-specific overrides (compose override, not sed)
+	@echo "OLS overrides are in compose/dify/docker-compose.override.yml — no sed patching needed"
 
-dify-up: dify-fetch dify-patch ## Fetch + patch + deploy Dify stack
-	bash $(ROOT)/scripts/dify-up.sh
+dify-up: dify-fetch ## Fetch + deploy Dify stack
+	bash $(ROOT)/scripts/stack.sh up dify
 
 dify-down:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/dify/docker-compose.yaml down
+	bash $(ROOT)/scripts/stack.sh down dify
 
 n8n-up:
-	bash $(ROOT)/scripts/n8n-up.sh
+	bash $(ROOT)/scripts/stack.sh up n8n
 
 n8n-down:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/n8n/docker-compose.n8n.yml down
+	bash $(ROOT)/scripts/stack.sh down n8n
 
 ollama-up:
-	bash $(ROOT)/scripts/ollama-up.sh
+	bash $(ROOT)/scripts/stack.sh up ollama
 
 ollama-down:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/ollama/docker-compose.ollama.yml down
+	bash $(ROOT)/scripts/stack.sh down ollama
 
 proxy-up:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml up -d
+	bash $(ROOT)/scripts/stack.sh up caddy
 
 proxy-down:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml down
+	bash $(ROOT)/scripts/stack.sh down caddy
 
 status:
-	docker compose ls
-	docker ps --filter network=ols-chatbot
+	bash $(ROOT)/scripts/stack.sh status
 
 logs:
 	docker compose -f $(ROOT)/compose/docker-compose.yml logs -f
@@ -58,16 +57,16 @@ seed-ollama:
 	docker exec ollama ollama pull $$(grep OLLAMA_EMBED_MODEL $(ROOT)/.env | cut -d= -f2- | sed 's/[[:space:]]*#.*//' | xargs)
 
 all-up:
-	bash $(ROOT)/scripts/ollama-up.sh
-	bash $(ROOT)/scripts/dify-up.sh
-	bash $(ROOT)/scripts/n8n-up.sh
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml up -d
+	bash $(ROOT)/scripts/stack.sh up ollama
+	bash $(ROOT)/scripts/stack.sh up dify
+	bash $(ROOT)/scripts/stack.sh up n8n
+	bash $(ROOT)/scripts/stack.sh up caddy
 
 all-down:
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/n8n/docker-compose.n8n.yml down
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/dify/docker-compose.yaml down || true
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/ollama/docker-compose.ollama.yml down
-	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/caddy/docker-compose.caddy.yml down
+	bash $(ROOT)/scripts/stack.sh down n8n
+	bash $(ROOT)/scripts/stack.sh down dify || true
+	bash $(ROOT)/scripts/stack.sh down ollama
+	bash $(ROOT)/scripts/stack.sh down caddy
 
 logs-dify:
 	docker compose -f $(ROOT)/compose/docker-compose.yml -f $(ROOT)/compose/dify/docker-compose.yaml logs -f

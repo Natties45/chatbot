@@ -1,0 +1,74 @@
+# OLS-specific overrides for Dify vendored compose
+# Applied on top of compose/dify/docker-compose.yaml (upstream, never edited)
+# Usage: docker compose -f compose/dify/docker-compose.yaml -f compose/dify/docker-compose.override.yaml up -d
+
+services:
+  # Remove profile requirement from db_postgres (always needed)
+  db_postgres:
+    profiles: []
+
+  # Fix volume paths: upstream uses ./xxx/ → we use ./compose/dify/xxx/
+  api:
+    volumes:
+      - ./compose/dify/volumes/app/storage:/app/api/storage
+    env_file:
+      - path: ./compose/dify/envs/common.env
+        required: true
+      - path: ./compose/dify/envs/backend.env
+        required: true
+
+  worker:
+    volumes:
+      - ./compose/dify/volumes/app/storage:/app/api/storage
+    env_file:
+      - path: ./compose/dify/envs/common.env
+        required: true
+      - path: ./compose/dify/envs/backend.env
+        required: true
+
+  worker_beat:
+    env_file:
+      - path: ./compose/dify/envs/common.env
+        required: true
+      - path: ./compose/dify/envs/backend.env
+        required: true
+
+  web:
+    env_file:
+      - path: ./compose/dify/envs/common.env
+        required: true
+      - path: ./compose/dify/envs/frontend.env
+        required: true
+
+  # Remove nginx port mapping (Caddy handles port 80)
+  nginx:
+    ports: []
+    volumes:
+      - ./compose/dify/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./compose/dify/nginx/proxy.conf.template:/etc/nginx/proxy.conf.template:ro
+      - ./compose/dify/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./compose/dify/nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh:ro
+
+  # SSRF proxy
+  ssrf_proxy:
+    volumes:
+      - ./compose/dify/ssrf_proxy/squid.conf.template:/etc/squid/squid.conf.template:ro
+      - ./compose/dify/ssrf_proxy/docker-entrypoint.sh:/docker-entrypoint-mount.sh:ro
+
+  # Certbot (optional)
+  certbot:
+    volumes:
+      - ./compose/dify/volumes/certbot/conf:/etc/letsencrypt
+      - ./compose/dify/certbot/update-cert.template.txt:/update-cert.template.txt:ro
+      - ./compose/dify/certbot/docker-entrypoint.sh:/docker-entrypoint-mount.sh:ro
+
+  # Sandbox
+  sandbox:
+    volumes:
+      - ./compose/dify/volumes/sandbox/dependencies:/dependencies
+
+# Override network: replace 'default' with 'ols-chatbot'
+networks:
+  default:
+    name: ols-chatbot
+    external: true

@@ -7,7 +7,7 @@
 
 # Dify web — the ONLY public endpoint
 :80 {
-	reverse_proxy web.compose_ols-chatbot:3000
+	reverse_proxy web:3000
 
 	# When a domain is added later, replace the block above with:
 	# chat.example.com {
@@ -16,11 +16,11 @@
 	# }
 }
 
-# n8n admin — public (firewall/secgroup controlled)
-# Suggestion: proxy ผ่าน Caddy เพื่อ double-layer basic_auth
-# :5678 {
-#   reverse_proxy n8n:5678
-#   basic_auth {
-#     ${N8N_BASIC_AUTH_USER} <bcrypt-hash-here>
-#   }
-# }
+# n8n admin — proxied through Caddy (not exposed directly)
+:5678 {
+	reverse_proxy n8n:5678
+	# n8n handles its own basic auth; Caddy adds TLS when domain is added
+	# basic_auth {
+	#   ${N8N_BASIC_AUTH_USER} <bcrypt-hash-here>
+	# }
+}

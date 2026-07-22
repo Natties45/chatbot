@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OLS Chatbot Environment Schema",
+  "description": "Required environment variables for n8n workflows and Docker Compose. Validated by preflight.sh before deploy.",
+  "type": "object",
+  "required": [
+    "DIFY_IMAGE_TAG",
+    "N8N_IMAGE_TAG",
+    "OLLAMA_IMAGE_TAG",
+    "N8N_HOST",
+    "N8N_PORT",
+    "N8N_PROTOCOL",
+    "WEBHOOK_URL",
+    "N8N_ENCRYPTION_KEY",
+    "N8N_BASIC_AUTH_USER",
+    "N8N_BASIC_AUTH_PASSWORD",
+    "N8N_DB_PASSWORD",
+    "DIFY_SECRET_KEY",
+    "DIFY_INIT_PASSWORD",
+    "DIFY_OPERATION_DATASET_ID",
+    "DIFY_OPERATION_API_KEY",
+    "DIFY_NOC_DATASET_ID",
+    "DIFY_NOC_API_KEY",
+    "DIFY_CUSTOMER_DATASET_ID",
+    "DIFY_CUSTOMER_API_KEY",
+    "DIFY_STAFF_DATASET_ID",
+    "DIFY_STAFF_API_KEY",
+    "OLLAMA_EMBED_MODEL",
+    "OLLAMA_CLOUD_API_KEY",
+    "OLLAMA_CLOUD_MODEL",
+    "VECTOR_STORE",
+    "BACKUP_DIR",
+    "BACKUP_RETENTION_DAYS"
+  ],
+  "properties": {
+    "DIFY_IMAGE_TAG": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "N8N_IMAGE_TAG": { "type": "string" },
+    "OLLAMA_IMAGE_TAG": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "N8N_PROTOCOL": { "type": "string", "enum": ["http", "https"] },
+    "VECTOR_STORE": { "type": "string", "enum": ["pgvector", "weaviate", "qdrant", "milvus"] }
+  }
+}

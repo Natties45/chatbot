@@ -1,5 +1,12 @@
 # Base compose file for OLS chatbot stack
-# Defines shared network and named volumes only.
+# Uses `include` (Compose v2.20+) to merge all sub-stacks into one entry point.
+# Single command: docker compose -f compose/docker-compose.yml up -d
+
+include:
+  - dify/docker-compose.yaml
+  - n8n/docker-compose.n8n.yml
+  - ollama/docker-compose.ollama.yml
+  - caddy/docker-compose.caddy.yml
 
 networks:
   ols-chatbot:

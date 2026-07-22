@@ -1,0 +1,27 @@
+# Backup manifest — declarative list of what to back up
+# backup.sh reads this file; add/remove entries without editing the script.
+#
+# Each target:
+#   name:     human-readable label
+#   type:     postgres | volume
+#   container: Docker container name (for postgres type)
+#   db:       database name (for postgres type)
+#   user:     database user (for postgres type)
+#   volume:   Docker volume name (for volume type)
+
+targets:
+  - name: dify-db
+    type: postgres
+    container: db_postgres
+    db: dify
+    user: postgres
+
+  - name: n8n-db
+    type: postgres
+    container: n8n-postgres
+    db: n8n
+    user: n8n
+
+  - name: n8n-data
+    type: volume
+    volume: ols-chatbot_n8n-data

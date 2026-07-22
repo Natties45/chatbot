@@ -1,7 +1,7 @@
 # Caddy reverse proxy for OLS chatbot (IP-only mode)
 services:
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2.8.4-alpine
     container_name: caddy
     ports:
       - "80:80"
