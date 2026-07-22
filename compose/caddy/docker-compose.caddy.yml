@@ -12,3 +12,10 @@ services:
     networks:
       - ols-chatbot
     restart: unless-stopped
+
+networks:
+  ols-chatbot:
+    driver: bridge
+
+volumes:
+  caddy-data:

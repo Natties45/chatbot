@@ -37,7 +37,10 @@ compose_cmd() {
   if [[ "$svc" == "all" ]]; then
     docker compose --project-directory "$ROOT" -f "$COMPOSE_BASE" --env-file "$ROOT/.env" "$@"
   else
-    docker compose --project-directory "$ROOT" -f "$COMPOSE_BASE" -f "${COMPOSE_FILES[$svc]}" --env-file "$ROOT/.env" "$@"
+    # Individual service: use service compose + base (for network/volumes) but NOT include
+    # The base file has `include:` which references dify/docker-compose.yaml that may not exist yet
+    # So for individual services, we use the service compose + network/volumes from base
+    docker compose --project-directory "$ROOT" -f "${COMPOSE_FILES[$svc]}" --env-file "$ROOT/.env" "$@"
   fi
 }
 
