@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Apply OLS-specific patches to Dify vendored compose
 # Run after `make dify-fetch`, before `make dify-up`
-# The compose file is at compose/dify/docker-compose.yaml
-# All relative paths (./nginx/, ./envs/) resolve relative to compose/dify/ — correct!
 set -euo pipefail
 
 COMPOSE_FILE="compose/dify/docker-compose.yaml"
@@ -14,7 +12,7 @@ fi
 
 echo "🔧 Patching Dify compose for OLS deployment..."
 
-python3 -c "
+python3 << 'PYEOF'
 import re, sys
 
 with open(sys.argv[1]) as f:
@@ -61,14 +59,24 @@ if 'ols-chatbot:\n    driver:' not in content:
 # 11. Ensure volumes section has entries
 content = re.sub(r'^volumes:\s*$', 'volumes:\n  dify-data:\n    external: true\n  oradata:\n  pgvector_data:\n  storage:', content, flags=re.MULTILINE)
 
-# 12. Fix nginx entrypoint: cp needs -r for directory
-content = content.replace(
-    'cp /docker-entrypoint-mount.sh /docker-entrypoint.sh',
-    'cp -r /docker-entrypoint-mount.sh /docker-entrypoint.sh'
+# 12. Fix nginx/ssrf_proxy entrypoint: run mounted script directly
+# The upstream compose does: cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && ...
+# But docker-entrypoint-mount.sh is a directory (from cp -r), not a file
+# Fix: run the mounted script directly
+old_entrypoint = (
+    'cp -r /docker-entrypoint-mount.sh /docker-entrypoint.sh && '
+    "sed -i 's/\\r$//' /docker-entrypoint.sh && "
+    'chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh'
 )
+new_entrypoint = (
+    "sed -i 's/\\r$//' /docker-entrypoint-mount.sh && "
+    'chmod +x /docker-entrypoint-mount.sh && /docker-entrypoint-mount.sh'
+)
+content = content.replace(old_entrypoint, new_entrypoint)
 
 with open(sys.argv[1], 'w') as f:
     f.write(content)
 
 print('✅ Dify compose patched for OLS deployment')
-" "$COMPOSE_FILE"
+PYEOF
+"$COMPOSE_FILE"
