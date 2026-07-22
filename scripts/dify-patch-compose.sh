@@ -32,6 +32,9 @@ sed -i '/- milvus/d; /- opensearch-net/d' "$COMPOSE_FILE"
 # 6. Remove milvus/opensearch network definitions
 sed -i '/^  milvus:/,/^[a-z]/d; /^  opensearch-net:/,/^[a-z]/d' "$COMPOSE_FILE"
 
+# 6b. Remove empty networks: lines left behind (etcd, minio, milvus had networks: with only milvus ref)
+sed -i '/^    networks:$/d' "$COMPOSE_FILE"
+
 # 7. Remove dify_es01_data volume
 sed -i '/dify_es01_data:/d' "$COMPOSE_FILE"
 
