@@ -59,6 +59,13 @@ with open(sys.argv[1], 'w') as f:
 # 7. Remove dify_es01_data volume
 sed -i '/dify_es01_data:/d' "$COMPOSE_FILE"
 
+# 7b. Remove oracle service (not needed) and fix oradata volume placement
+sed -i '/^  oracle:/,/^[a-z]/d' "$COMPOSE_FILE"
+# oradata is defined under networks: instead of volumes: — move it
+sed -i 's/^  oradata:/# oradata: (moved to volumes)/' "$COMPOSE_FILE"
+# Add oradata to volumes section
+sed -i '/^volumes:/a\  oradata:' "$COMPOSE_FILE"
+
 # 8. Replace 'default' network with 'ols-chatbot'
 sed -i 's/network: default/network: ols-chatbot/g; s/    - default/    - ols-chatbot/g' "$COMPOSE_FILE"
 
