@@ -37,14 +37,14 @@ cd chatbot
 cp .env.example .env
 # กรอก .env: DIFY_SECRET_KEY=$(openssl rand -hex 48), DB/Redis password, INIT_PASSWORD
 
-bash scripts/ollama-up.sh   # รัน bge-m3 local embeddings
-bash scripts/dify-up.sh     # ดึง vendored compose + รัน Dify
+bash scripts/stack.sh up ollama   # รัน bge-m3 local embeddings
+bash scripts/stack.sh up dify     # ดึง vendored compose + รัน Dify
 ```
 
 Acceptance (proposal L443-448):
 - [ ] `docker compose ps` healthy ครบ
-- [ ] Dify Web UI ที่ http://<IP>:80
-- [ ] Owner login = @Natties45
+- [ ] Dify Web UI ที่ http://203.154.16.45
+- [ ] Owner login = admin@ols-chatbot.local
 - [ ] Model Provider: Ollama (local) bge-m3 เชื่อมต่อ
 - [ ] Model Provider: Ollama Cloud Pro qwen2.5 เชื่อมต่อ (ใส่ key ใน UI)
 - [ ] ทดสอบ chatbot ตอบภาษาไทยได้
@@ -53,12 +53,12 @@ Acceptance (proposal L443-448):
 ## Phase 3 — n8n
 
 ```bash
-bash scripts/n8n-up.sh
-# เปิด http://<server-ip>:5678 → สร้าง owner → สร้าง credentials (ดู n8n/credentials/README.md)
+bash scripts/stack.sh up n8n
+# เปิด http://203.154.16.45:5678 → สร้าง owner → สร้าง credentials (ดู n8n/credentials/README.md)
 ```
 
 Acceptance (proposal L540):
-- [ ] n8n UI เข้าได้ที่ http://<server-ip>:5678 (firewall/secgroup ต้องเปิด port 5678)
+- [ ] n8n UI เข้าได้ที่ http://203.154.16.45:5678 (firewall/secgroup ต้องเปิด port 5678)
 - [ ] credentials ครบ: GitHub SSH, Dify Dataset API, LINE Notify
 - [ ] ไม่มี secret ใน workflow JSON
 
