@@ -11,8 +11,26 @@ import time
 import requests
 import yaml
 
-DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://127.0.0.1/v1")
+def load_dotenv():
+    env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if os.path.exists(env_file):
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    k, v = k.strip(), v.strip()
+                    if k not in os.environ:
+                        os.environ[k] = v
+
+load_dotenv()
+
+DIFY_API_BASE = os.getenv("DIFY_API_BASE", "http://203.154.16.45/v1")
 REPO_PATH = os.getenv("REPO_PATH", "/tmp/selfservice-repo/data/knowledge")
+if not os.path.exists(REPO_PATH):
+    local_kb = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "KB", "data", "knowledge"))
+    if os.path.exists(local_kb):
+        REPO_PATH = local_kb
 
 DATASETS = {
     "operation": {

@@ -21,54 +21,7 @@
     },
     {
       "parameters": {
-        "command": "git -C /tmp/selfservice-repo pull origin main && python3 -c \"
-import os, yaml, json
-
-kb_path = '/tmp/selfservice-repo/data/knowledge'
-result = {'operation': [], 'noc': [], 'customer': []}
-
-for root, _, files in os.walk(kb_path):
-    for f in files:
-        if f.endswith('.yaml'):
-            filepath = os.path.join(root, f)
-            with open(filepath, 'r', encoding='utf-8') as stream:
-                try:
-                    data = yaml.safe_load(stream) or {}
-                    file_default = data.get('default_audience', ['operation'])
-                    
-                    # Ensure file_default is valid list, else fallback to ['operation'] (Default Deny)
-                    if not isinstance(file_default, list):
-                        file_default = ['operation']
-                        
-                    cats = data.get('categories', {})
-                    for cat_id, cat_val in cats.items():
-                        sections = cat_val.get('sections', {})
-                        for sec_id, sec_val in sections.items():
-                            entries = sec_val.get('entries', [])
-                            for entry in entries:
-                                audience = entry.get('audience', file_default)
-                                if not isinstance(audience, list):
-                                    audience = ['operation']
-                                    
-                                item = {
-                                    'id': entry.get('id'),
-                                    'intent': entry.get('intent'),
-                                    'answer': entry.get('answer'),
-                                    'keywords': entry.get('keywords', []),
-                                    'refs': entry.get('refs', [])
-                                }
-                                
-                                if 'operation' in audience:
-                                    result['operation'].append(item)
-                                if 'noc' in audience:
-                                    result['noc'].append(item)
-                                if 'customer' in audience:
-                                    result['customer'].append(item)
-                except Exception as e:
-                    pass
-
-print(json.dumps(result))
-\""
+        "command": "git -C /tmp/selfservice-repo pull origin main && python3 -c \"import os, yaml, json\\nkb_path = '/tmp/selfservice-repo/data/knowledge'\\nresult = {'operation': [], 'noc': [], 'customer': []}\\nfor root, _, files in os.walk(kb_path):\\n    for f in files:\\n        if f.endswith('.yaml'):\\n            filepath = os.path.join(root, f)\\n            with open(filepath, 'r', encoding='utf-8') as stream:\\n                try:\\n                    data = yaml.safe_load(stream) or {}\\n                    file_default = data.get('default_audience', ['operation'])\\n                    if not isinstance(file_default, list): file_default = ['operation']\\n                    cats = data.get('categories', {})\\n                    for cat_id, cat_val in cats.items():\\n                        sections = cat_val.get('sections', {})\\n                        for sec_id, sec_val in sections.items():\\n                            for entry in sec_val.get('entries', []):\\n                                audience = entry.get('audience', file_default)\\n                                if not isinstance(audience, list): audience = ['operation']\\n                                item = {'id': entry.get('id'), 'intent': entry.get('intent'), 'answer': entry.get('answer'), 'keywords': entry.get('keywords', []), 'refs': entry.get('refs', [])}\\n                                for r in ['operation', 'noc', 'customer']:\\n                                    if r in audience: result[r].append(item)\\n                except Exception: pass\\nprint(json.dumps(result))\""
       },
       "id": "parse-and-filter-kb",
       "name": "Parse YAML & Filter Audience (Default Deny)",

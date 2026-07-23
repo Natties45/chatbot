@@ -6,7 +6,7 @@ import os
 import json
 import subprocess
 
-WORKFLOW_FILE = os.getenv("WORKFLOW_FILE", "n8n/workflows/01-github-dify-sync.json")
+WORKFLOW_FILE = os.getenv("WORKFLOW_FILE", "n8n/workflows/n8n-kb-sync-workflow.json")
 
 if not os.path.exists(WORKFLOW_FILE):
     print(f"[ERROR] Workflow file '{WORKFLOW_FILE}' not found.")
