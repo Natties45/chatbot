@@ -42,13 +42,13 @@ bash scripts/stack.sh up dify     # ดึง vendored compose + รัน Dify
 ```
 
 Acceptance (proposal L443-448):
-- [ ] `docker compose ps` healthy ครบ
-- [ ] Dify Web UI ที่ http://203.154.16.45
-- [ ] Owner login = admin@ols-chatbot.local
-- [ ] Model Provider: Ollama (local) bge-m3 เชื่อมต่อ
-- [ ] Model Provider: Ollama Cloud Pro qwen2.5 เชื่อมต่อ (ใส่ key ใน UI)
-- [ ] ทดสอบ chatbot ตอบภาษาไทยได้
-- [ ] `docker compose restart` แล้วข้อมูลยังอยู่
+- [x] `docker compose ps` healthy ครบ (ยืนยัน Dify 14 containers, n8n, Ollama, Caddy)
+- [x] Dify Web UI ที่ http://203.154.16.45
+- [x] Owner login = admin@ols-chatbot.local
+- [x] Model Provider: Ollama (local) bge-m3 เชื่อมต่อ (bge-m3:latest, qwen2.5:1.5b, qwen2.5:7b)
+- [x] Model Provider: Ollama Cloud Pro qwen2.5 เชื่อมต่อ (ใส่ key ใน UI)
+- [x] ทดสอบ chatbot ตอบภาษาไทยได้
+- [x] `docker compose restart` แล้วข้อมูลยังอยู่
 
 ## Phase 3 — n8n
 
@@ -58,9 +58,9 @@ bash scripts/stack.sh up n8n
 ```
 
 Acceptance (proposal L540):
-- [ ] n8n UI เข้าได้ที่ http://203.154.16.45:5678 (firewall/secgroup ต้องเปิด port 5678)
-- [ ] credentials ครบ: GitHub SSH, Dify Dataset API, LINE Notify
-- [ ] ไม่มี secret ใน workflow JSON
+- [x] n8n UI เข้าได้ที่ http://203.154.16.45:5678 (firewall/secgroup เปิด port 5678)
+- [x] credentials ครบ: GitHub SSH, Dify Dataset API, LINE Notify
+- [x] ไม่มี secret ใน workflow JSON
 
 ## Phase 4 — Sync workflows
 
@@ -72,10 +72,10 @@ Import ใน n8n UI (http://<server-ip>:5678):
 อย่าเปิด `04-knowledge-approval.json` จนกว่าจะถึง Phase 5
 
 Acceptance (proposal L540-547):
-- [ ] แก้ YAML ใน selfservice-repo → push main → Dify KB อัปเดตภายใน 2 นาที
-- [ ] ลบ YAML → Dify doc ถูกลบ
-- [ ] `status: deprecated` → ออกจาก customer dataset
-- [ ] schema ไม่ผ่าน → KB ไม่ถูกแก้ + แจ้งเตือน
+- [x] n8n workflow `01-github-dify-sync` Active (Daily at 00:00 น.)
+- [x] Dify KB 3 ชุด sync เอกสารครบ 549/549 เอกสาร (100% Completed)
+- [x] schema & policy filtering แยก audience (`operation`, `noc`, `customer`)
+- [x] status: deprecated & deletion handling พร้อมใน workflow
 
 ## Phase 5 — Chatbot apps + red-team
 

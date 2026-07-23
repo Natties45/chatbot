@@ -82,3 +82,10 @@ backup:
 
 restore:
 	bash $(ROOT)/scripts/restore.sh $(ARCHIVE)
+
+install:
+	bash $(ROOT)/scripts/install.sh
+
+setup-workspace:
+	bash $(ROOT)/scripts/setup_workspace.sh
+

@@ -1,0 +1,166 @@
+{
+  "id": "w-n8n-kb-sync-workflow",
+  "name": "n8n-kb-sync-workflow",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kb-sync-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Git Push Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "notes": "Receives Webhook trigger on Git Push event."
+    },
+    {
+      "parameters": {
+        "command": "git -C /tmp/selfservice-repo pull origin main && python3 -c \"
+import os, yaml, json
+
+kb_path = '/tmp/selfservice-repo/data/knowledge'
+result = {'operation': [], 'noc': [], 'customer': []}
+
+for root, _, files in os.walk(kb_path):
+    for f in files:
+        if f.endswith('.yaml'):
+            filepath = os.path.join(root, f)
+            with open(filepath, 'r', encoding='utf-8') as stream:
+                try:
+                    data = yaml.safe_load(stream) or {}
+                    file_default = data.get('default_audience', ['operation'])
+                    
+                    # Ensure file_default is valid list, else fallback to ['operation'] (Default Deny)
+                    if not isinstance(file_default, list):
+                        file_default = ['operation']
+                        
+                    cats = data.get('categories', {})
+                    for cat_id, cat_val in cats.items():
+                        sections = cat_val.get('sections', {})
+                        for sec_id, sec_val in sections.items():
+                            entries = sec_val.get('entries', [])
+                            for entry in entries:
+                                audience = entry.get('audience', file_default)
+                                if not isinstance(audience, list):
+                                    audience = ['operation']
+                                    
+                                item = {
+                                    'id': entry.get('id'),
+                                    'intent': entry.get('intent'),
+                                    'answer': entry.get('answer'),
+                                    'keywords': entry.get('keywords', []),
+                                    'refs': entry.get('refs', [])
+                                }
+                                
+                                if 'operation' in audience:
+                                    result['operation'].append(item)
+                                if 'noc' in audience:
+                                    result['noc'].append(item)
+                                if 'customer' in audience:
+                                    result['customer'].append(item)
+                except Exception as e:
+                    pass
+
+print(json.dumps(result))
+\""
+      },
+      "id": "parse-and-filter-kb",
+      "name": "Parse YAML & Filter Audience (Default Deny)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "notes": "Reads all YAML files, applies File-level default and Entry-level override. Applies Default Deny if tag missing/invalid."
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = JSON.parse($input.first().json.stdout);\nreturn [\n  { json: { role: 'operation', count: payload.operation.length, docs: payload.operation } },\n  { json: { role: 'noc', count: payload.noc.length, docs: payload.noc } },\n  { json: { role: 'customer', count: payload.customer.length, docs: payload.customer } }\n];"
+      },
+      "id": "split-roles",
+      "name": "Split into 3 Role Bundles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "notes": "Outputs 3 separate dataset items for Operation, NOC, and Customer."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://dify-api:5001/v1/datasets/sync-{{ $json.role }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.DIFY_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "role",
+              "value": "={{ $json.role }}"
+            },
+            {
+              "name": "documents",
+              "value": "={{ $json.docs }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sync-to-dify-api",
+      "name": "Sync to Dify Datasets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [660, 0],
+      "notes": "Pushes transformed role datasets to Dify APIs (kb-operation, kb-noc, kb-customer)."
+    }
+  ],
+  "connections": {
+    "Git Push Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse YAML & Filter Audience (Default Deny)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse YAML & Filter Audience (Default Deny)": {
+      "main": [
+        [
+          {
+            "node": "Split into 3 Role Bundles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split into 3 Role Bundles": {
+      "main": [
+        [
+          {
+            "node": "Sync to Dify Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

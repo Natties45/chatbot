@@ -12,7 +12,7 @@
 targets:
   - name: dify-db
     type: postgres
-    container: db_postgres
+    container: dify-db_postgres-1
     db: dify
     user: postgres
 

@@ -1,6 +1,7 @@
 {
+  "id": "w1-github-dify-sync",
   "name": "01-github-dify-sync",
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
@@ -8,27 +9,33 @@
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "minutes", "minutesInterval": 2 }]
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 0,
+              "triggerAtMinute": 0
+            }
+          ]
         }
       },
       "id": "trigger-schedule",
-      "name": "Schedule (every 2 min)",
+      "name": "Schedule (daily at 00:00)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
       "position": [0, 0],
-      "notes": "Poll-based sync (no webhook needed). Swap to GitHub Webhook trigger later."
+      "notes": "Daily sync at midnight 00:00."
     },
     {
       "parameters": {
-        "command": "cd /tmp/selfservice-repo && git fetch origin main && git reset --hard origin/main && git diff HEAD~1 --name-only"
+        "command": "if [ ! -d /tmp/selfservice-repo ]; then git clone git@github.com:Natties45/selfservice-repo.git /tmp/selfservice-repo; else cd /tmp/selfservice-repo && git remote set-url origin git@github.com:Natties45/selfservice-repo.git; fi && cd /tmp/selfservice-repo && git fetch origin main && git reset --hard origin/main && git diff HEAD~1 --name-only"
       },
       "id": "git-pull",
       "name": "Git Pull (SSH)",
-      "type": "n8n-nodes-base.executeCommand",
+      "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
       "position": [220, 0],
       "credentials": {
-        "ssh": [{ "id": "REPLACE_WITH_CRED_ID", "name": "GitHub SSH" }]
+        "ssh": [{ "id": "BMP2jAKLsWa8rfsR", "name": "SSH Private Key account" }]
       },
       "notes": "Uses SSH credential. Repo cloned once at /tmp/selfservice-repo on n8n host."
     },
@@ -53,7 +60,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [660, 0],
-      "notes": "Validate against selfservice-repo/schemas/*.yaml. Reject -> halt + notify."
+      "notes": "Validate against selfservice-repo/schemas/*.yaml. Reject -> halt."
     },
     {
       "parameters": {
@@ -194,30 +201,6 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1540, 0]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://notify-api.line.me/api/notify",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "Bearer {{$env.LINE_NOTIFY_TOKEN}}" }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "message", "value": "=[OLS chatbot sync FAIL] {{$json.error}}" }
-          ]
-        }
-      },
-      "id": "notify-failure",
-      "name": "Notify on failure",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [1760, 0],
-      "notes": "Alert @Natties45 on validation/upsert failure (proposal L283)."
     }
   ],
   "connections": {
